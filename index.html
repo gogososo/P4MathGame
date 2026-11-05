@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>小四數學挑戰 · P.4 Maths Quiz</title>
+<meta name="description" content="小四數學問答遊戲 — 取材自四份小四數學試卷">
+<style>
+:root{
+  --bg:#0f1724; --bg2:#16213a; --card:#1c2944; --line:#2c3c5e;
+  --ink:#eaf1ff; --dim:#9fb0cd;
+  --accent:#4cc3ff; --accent2:#7c6bff;
+  --ok:#27d796; --bad:#ff6b7d; --warn:#ffd166;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:radial-gradient(1100px 650px at 15% -10%,#24345c 0%,transparent 55%),
+             radial-gradient(900px 600px at 110% 10%,#3a2a63 0%,transparent 50%),
+             var(--bg);
+  color:var(--ink); min-height:100vh; line-height:1.65;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+.wrap{max-width:780px;margin:0 auto;padding:18px 16px 40px}
+.hide{display:none !important}
+
+/* ---------- 標題 ---------- */
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.logo{width:46px;height:46px;border-radius:13px;flex:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;font-weight:800;font-size:20px;color:#0b1020}
+.brand h1{margin:0;font-size:20px;letter-spacing:.5px}
+.brand p{margin:0;font-size:12.5px;color:var(--dim)}
+
+/* ---------- 卡片 ---------- */
+.card{background:linear-gradient(180deg,var(--card),var(--bg2));
+  border:1px solid var(--line);border-radius:var(--r);padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.card + .card{margin-top:14px}
+
+h2{margin:0 0 4px;font-size:17px}
+.sub{color:var(--dim);font-size:13px;margin:0 0 14px}
+
+/* ---------- 選擇列 ---------- */
+.label{font-size:12.5px;color:var(--dim);margin:14px 0 7px;letter-spacing:.4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#16233c;color:var(--ink);
+  padding:9px 14px;border-radius:999px;cursor:pointer;font-size:13.5px;
+  font-family:inherit;transition:.15s}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-color:transparent;color:#0b1020;font-weight:700}
+.chip .n{opacity:.7;font-size:11.5px;margin-left:5px}
+
+.btn{display:block;width:100%;margin-top:18px;padding:14px;border:0;border-radius:13px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b1020;
+  font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.5px}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.row{display:flex;gap:10px}
+.row>.btn{margin-top:12px}
+
+/* ---------- HUD ---------- */
+.hud{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pill{background:#16233c;border:1px solid var(--line);border-radius:999px;
+  padding:6px 13px;font-size:13px;white-space:nowrap}
+.pill b{color:var(--accent)}
+.pill.combo b{color:var(--warn)}
+.bar{height:7px;background:#16233c;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+
+/* ---------- 題目 ---------- */
+.qsrc{font-size:11.5px;color:var(--dim);margin-bottom:8px;letter-spacing:.4px}
+.qtext{font-size:17.5px;font-weight:600;margin:0 0 14px;line-height:1.75}
+.qtable{overflow-x:auto;margin:0 0 14px}
+table{border-collapse:collapse;font-size:13.5px;min-width:100%;background:#13203a}
+th,td{border:1px solid var(--line);padding:7px 11px;text-align:center;white-space:nowrap}
+th{background:#1b2b4a;font-weight:700}
+
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
+  background:#16233c;border:1.5px solid var(--line);color:var(--ink);
+  padding:13px 15px;border-radius:13px;cursor:pointer;font-size:15.5px;
+  font-family:inherit;line-height:1.6;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--accent);transform:translateX(2px)}
+.opt:disabled{cursor:default}
+.opt .k{flex:none;width:26px;height:26px;border-radius:8px;background:#22314f;
+  display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--dim)}
+.opt.ok{border-color:var(--ok);background:rgba(39,215,150,.14)}
+.opt.ok .k{background:var(--ok);color:#06251a}
+.opt.bad{border-color:var(--bad);background:rgba(255,107,125,.13)}
+.opt.bad .k{background:var(--bad);color:#2b0710}
+
+.fb{margin-top:14px;padding:13px 15px;border-radius:13px;font-size:14.5px;
+  border:1px solid var(--line);background:#13203a}
+.fb .t{font-weight:800;margin-bottom:4px}
+.fb.ok .t{color:var(--ok)} .fb.bad .t{color:var(--bad)}
+.fb .e{color:var(--dim);font-size:13.5px}
+
+/* ---------- 結果 ---------- */
+.score{text-align:center;padding:10px 0 4px}
+.score .big{font-size:52px;font-weight:900;line-height:1.1;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.score .msg{font-size:15px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 4px}
+.stat{background:#16233c;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
+.stat b{display:block;font-size:19px}
+.stat span{font-size:11.5px;color:var(--dim)}
+
+.review{margin-top:16px}
+.rv{border:1px solid var(--line);border-left:3px solid var(--bad);
+  background:#13203a;border-radius:10px;padding:11px 13px;margin-bottom:9px;font-size:13.5px}
+.rv .q{font-weight:600;margin-bottom:5px}
+.rv .a{color:var(--ok)} .rv .y{color:var(--bad)}
+.rv .e{color:var(--dim);font-size:12.5px;margin-top:4px}
+
+.foot{text-align:center;color:var(--dim);font-size:12px;margin-top:22px;line-height:1.9}
+kbd{background:#16233c;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
+
+@media(max-width:520px){
+  .qtext{font-size:16.5px} .opt{font-size:15px} .score .big{font-size:44px}
+  .stats{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo">÷</div>
+    <div>
+      <h1>小四數學挑戰</h1>
+      <p>P.4 Maths Quiz · 取材自四份小四數學試卷</p>
+    </div>
+  </div>
+
+  <!-- ===== 開始畫面 ===== -->
+  <section id="home" class="card">
+    <h2>選擇你的挑戰</h2>
+    <p class="sub">答對得分，連續答對有額外獎分。可用鍵盤 <kbd>1</kbd>–<kbd>4</kbd> 作答，<kbd>Enter</kbd> 下一題。</p>
+
+    <div class="label">範疇</div>
+    <div class="chips" id="catChips"></div>
+
+    <div class="label">題目數量</div>
+    <div class="chips" id="lenChips"></div>
+
+    <button class="btn" id="startBtn">開始挑戰</button>
+    <div class="foot" id="bestLine"></div>
+  </section>
+
+  <!-- ===== 遊戲畫面 ===== -->
+  <section id="game" class="card hide">
+    <div class="hud">
+      <span class="pill">第 <b id="qNow">1</b> / <span id="qAll">10</span> 題</span>
+      <span class="pill">分數 <b id="score">0</b></span>
+      <span class="pill combo" id="comboPill">連擊 <b id="combo">0</b></span>
+      <span class="pill" id="catPill"></span>
+    </div>
+    <div class="bar"><i id="prog"></i></div>
+
+    <div class="qsrc" id="qsrc"></div>
+    <p class="qtext" id="qtext"></p>
+    <div class="qtable" id="qtable"></div>
+    <div class="opts" id="opts"></div>
+    <div id="fb"></div>
+    <button class="btn hide" id="nextBtn">下一題</button>
+  </section>
+
+  <!-- ===== 結果畫面 ===== -->
+  <section id="end" class="card hide">
+    <div class="score">
+      <div class="big" id="finalScore">0</div>
+      <div class="msg" id="finalMsg"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="sCorrect">0</b><span>答對</span></div>
+      <div class="stat"><b id="sRate">0%</b><span>正確率</span></div>
+      <div class="stat"><b id="sBest">0</b><span>最長連擊</span></div>
+    </div>
+    <div class="review" id="review"></div>
+    <div class="row">
+      <button class="btn" id="againBtn">再玩一次</button>
+      <button class="btn ghost" id="homeBtn">換範疇</button>
+    </div>
+  </section>
+
+  <div class="foot">
+    題目取材自 4001 / 4002 / 4003 / 4004 四份小四數學試卷 ·
+    共 <span id="totalQ">0</span> 題題庫<br>離線可用，毋須網絡
+  </div>
+</div>
+
+<script>
+/* 題庫：取材自 Sources questions 內四份 P.4 數學試卷
+   4001 / 4002 / 4003 / 4004
+   c = 範疇, q = 題目, t = 附表(可選), o = 選項, a = 正確選項索引, e = 解釋, s = 來源 */
+window.QUESTIONS = [
+
+/* ========== 數的運算 ========== */
+{c:'calc',s:'4001',q:'25 × 32 × 4 = ?',o:['3200','320','800','2800'],a:0,
+ e:'先湊整：25 × 4 = 100，再 100 × 32 = 3200。'},
+{c:'calc',s:'4002',q:'93 × 60 = ?',o:['558','5508','5580','5880'],a:2,
+ e:'93 × 6 = 558，再補一個 0 → 5580。'},
+{c:'calc',s:'4002',q:'51 × 284 = ?',o:['14184','14484','1448','14384'],a:1,
+ e:'284 × 50 = 14200，284 × 1 = 284，合計 14484。'},
+{c:'calc',s:'4002',q:'78 ÷ 12 = ?',o:['6 餘 4','6 餘 6','7 餘 6','6 餘 8'],a:1,
+ e:'12 × 6 = 72，78 − 72 = 6，所以商 6 餘 6。'},
+{c:'calc',s:'4002',q:'25 × 33 × 4 = ?',o:['3300','330','1300','3200'],a:0,
+ e:'25 × 4 = 100，100 × 33 = 3300。'},
+{c:'calc',s:'4003',q:'26 × 30 = ?',o:['708','780','7800','680'],a:1,
+ e:'26 × 3 = 78，再補一個 0 → 780。'},
+{c:'calc',s:'4003',q:'106 × 42 = ?',o:['4452','4425','4352','4462'],a:0,
+ e:'106 × 40 = 4240，106 × 2 = 212，合計 4452。'},
+{c:'calc',s:'4003',q:'91 ÷ 13 = ?',o:['6','7','8','9'],a:1,
+ e:'13 × 7 = 91，整除，商為 7。'},
+{c:'calc',s:'4003',q:'846 ÷ 54 = ?',o:['15 餘 36','15 餘 6','16 餘 18','14 餘 90'],a:0,
+ e:'54 × 15 = 810，846 − 810 = 36，所以商 15 餘 36。'},
+{c:'calc',s:'4004',q:'889 − 651 ÷ 7 = ?',o:['34','796','882','805'],a:1,
+ e:'先算除法：651 ÷ 7 = 93，再 889 − 93 = 796。'},
+{c:'calc',s:'4004',q:'( 150 + 650 ) ÷ 8 = ?',o:['100','1000','95','80'],a:0,
+ e:'先算括號：150 + 650 = 800，再 800 ÷ 8 = 100。'},
+{c:'calc',s:'4004',q:'10 − ( 80 − 14 × 5 ) = ?',o:['0','10','20','70'],a:0,
+ e:'括號內先乘：14 × 5 = 70；80 − 70 = 10；10 − 10 = 0。'},
+{c:'calc',s:'4002',q:'以下哪一道算式與 125 × 56 的答案相同？',
+ o:['130 × 60','120 × 50','125 × 8 × 7','100 × 25 × 56'],a:2,
+ e:'56 = 8 × 7，所以 125 × 56 = 125 × 8 × 7 = 1000 × 7 = 7000。'},
+{c:'calc',s:'4003',q:'以下哪一道算式的答案與 25 × 17 × 2 的相同？',
+ o:['40 × 17','25 × 20','50 × 17','20 × 34'],a:2,
+ e:'25 × 2 = 50，所以原式 = 50 × 17 = 850。'},
+{c:'calc',s:'4003',q:'以下哪一項數式的結果最接近 698 ÷ 28？',
+ o:['600 ÷ 20','600 ÷ 30','700 ÷ 20','700 ÷ 30'],a:3,
+ e:'698 ÷ 28 約等於 24.9。700 ÷ 30 約等於 23.3，最接近。'},
+{c:'calc',s:'4004',q:'以下哪一個數最接近 299 ÷ 29 × ( 23 − 10 ) 這算式的計算結果？',
+ o:['1','10','100','200'],a:2,
+ e:'299 ÷ 29 約等於 10，10 × 13 = 130，最接近 100。'},
+
+/* ========== 因數、倍數與整除 ========== */
+{c:'num',s:'4001',q:'198 最少要加上多少才能被 2 和 5 整除？',o:['2','4','10','12'],a:0,
+ e:'同時被 2 和 5 整除即能被 10 整除。198 之後最近的是 200，所以加 2。'},
+{c:'num',s:'4003',q:'283 最少要減去下列哪一個數才能夠被 5 整除？',o:['2','3','5','8'],a:1,
+ e:'被 5 整除的數個位是 0 或 5。283 − 3 = 280，所以減 3。'},
+{c:'num',s:'4004',q:'59101 最少要加上多少才可以被 3 整除？',o:['1','2','3','5'],a:1,
+ e:'各位數字和 5+9+1+0+1 = 16，最近的 3 的倍數是 18，所以加 2。'},
+{c:'num',s:'4001',q:'用 0、3、6、8、9 組合出一個最大的五位單數，這個數是多少？',
+ o:['98630','98603','96830','89630'],a:1,
+ e:'單數的個位必須是 3 或 9。個位放 3，其餘由大至小排成 9860 → 98603，比 86309 大。'},
+{c:'num',s:'4003',q:'用 0、1、8 和 5 排出一個能夠被 10 整除的最大四位數。',
+ o:['8510','8150','5810','1850'],a:0,
+ e:'被 10 整除個位必須是 0，其餘 8、5、1 由大至小排 → 8510。'},
+{c:'num',s:'4003',q:'用 0、4 和 7 可以排出多少個能夠被 2 整除的三位數？',
+ o:['2 個','3 個','4 個','6 個'],a:1,
+ e:'個位要是 0 或 4：470、740、704，共 3 個（074 不是三位數）。'},
+{c:'num',s:'4003',q:'12 是以下哪一組數的公因數？',o:['1，12','3，4','12，40','24，36'],a:3,
+ e:'24 ÷ 12 = 2，36 ÷ 12 = 3，兩個數都能被 12 整除。'},
+{c:'num',s:'4003',q:'某數的第 5 個倍數是 60，它的第 3 個倍數是多少？',o:['18','36','48','180'],a:1,
+ e:'某數 = 60 ÷ 5 = 12，第 3 個倍數 = 12 × 3 = 36。'},
+{c:'num',s:'4003',q:'以下哪一個數不是 18 和 36 的公倍數？',o:['18','36','108','180'],a:0,
+ e:'18 和 36 的最小公倍數是 36。18 不是 36 的倍數，所以不是公倍數。'},
+{c:'num',s:'4003',q:'17 和 51 的最大公因數（H.C.F.）是多少？',o:['3','17','34','51'],a:1,
+ e:'51 = 17 × 3，所以 17 是 51 的因數，最大公因數為 17。'},
+{c:'num',s:'4003',q:'20 和 50 之間，所有 3 和 4 的公倍數是哪一組？',
+ o:['24、36、48','21、28、35','24、32、40','30、40、50'],a:0,
+ e:'3 和 4 的最小公倍數是 12，12 的倍數中介乎 20 至 50 的有 24、36、48。'},
+{c:'num',s:'4003',q:'小玲今年 10 歲，弟弟的年齡是小玲年齡的因數，而且他們二人的年齡不同。弟弟今年可能是多少歲？',
+ o:['1 和 2','2 和 5','1、2 和 5','1、2、5 和 10'],a:2,
+ e:'10 的因數是 1、2、5、10；因年齡不同，須去掉 10。'},
+{c:'num',s:'4002',q:'☺ ÷ 14 = 2…7，☺ 代表的數字是多少？',o:['28','35','21','49'],a:1,
+ e:'被除數 = 除數 × 商 + 餘數 = 14 × 2 + 7 = 35。'},
+{c:'num',s:'4004',q:'★ 是一個兩位數，( 16 + 9 ) ÷ 25 × ★ 的最小值是多少？',
+ o:['0','9','10','99'],a:2,
+ e:'( 16 + 9 ) ÷ 25 = 1，所以算式等於 ★。最小的兩位數是 10。'},
+
+/* ========== 應用題 ========== */
+{c:'word',s:'4001',q:'四年級甲班有學生 30 人，比乙班少 6 人，丙班比乙班多 9 人。現每人交班會費 5 元，四年級丙班共可收得班會費多少元？',
+ o:['150 元','180 元','225 元','270 元'],a:2,
+ e:'乙班 = 30 + 6 = 36 人；丙班 = 36 + 9 = 45 人；45 × 5 = 225 元。'},
+{c:'word',s:'4001',q:'小販有帽 126 頂，每頂售 28 元。小販賣出所有帽可得多少元？',
+ o:['3528 元','3428 元','3508 元','2528 元'],a:0,
+ e:'126 × 28 = 126 × 30 − 126 × 2 = 3780 − 252 = 3528 元。'},
+{c:'word',s:'4001',q:'體育室內有足球 38 個，排球 152 個。排球的數量是足球的多少倍？',
+ o:['3 倍','4 倍','5 倍','114 倍'],a:1,
+ e:'152 ÷ 38 = 4，所以是 4 倍。'},
+{c:'word',s:'4001',q:'老師有 304 粒糖果，平均分給 24 人後，還餘多少粒？',
+ o:['12 粒','14 粒','16 粒','18 粒'],a:2,
+ e:'304 ÷ 24 = 12 餘 16，所以餘 16 粒。'},
+{c:'word',s:'4001',q:'六年級有 3 班，每班有學生 32 人，每人要交簿費 102 元。全級共收費多少元？',
+ o:['9792 元','9612 元','3264 元','9892 元'],a:0,
+ e:'3 × 32 = 96 人；96 × 102 = 9792 元。'},
+{c:'word',s:'4001',q:'小食店有汽水 8 箱，每箱有 124 樽，現只剩 2 箱。小食店共賣出汽水多少樽？',
+ o:['248 樽','744 樽','992 樽','868 樽'],a:1,
+ e:'賣出 8 − 2 = 6 箱；6 × 124 = 744 樽。'},
+{c:'word',s:'4001',q:'漢堡包 98 個，每個紙盒可放 8 個。最少要紙盒多少個才可盛載所有漢堡包？',
+ o:['12 個','13 個','14 個','11 個'],a:1,
+ e:'98 ÷ 8 = 12 餘 2，餘下的 2 個仍需一個盒，所以要 13 個。'},
+{c:'word',s:'4002',q:'玩具車的售價是洋娃娃的 2 倍。玩具車現售 74 元，洋娃娃售多少元？',
+ o:['148 元','37 元','72 元','76 元'],a:1,
+ e:'洋娃娃 = 74 ÷ 2 = 37 元。'},
+{c:'word',s:'4002',q:'遊樂場門票每張 238 元，現優惠買 10 送 1。4F 班全班 28 人享用優惠購票，他們共須付多少元？',
+ o:['6664 元','6188 元','5950 元','4760 元'],a:1,
+ e:'每 11 人只付 10 張；28 ÷ 11 = 2 組餘 6，付 2 × 10 + 6 = 26 張；26 × 238 = 6188 元。'},
+{c:'word',s:'4002',q:'每包水果糖有 65 粒，其中 13 粒是草莓味。陳老師買了 22 包，她共有草莓味水果糖多少粒？',
+ o:['1430 粒','286 粒','1144 粒','260 粒'],a:1,
+ e:'每包草莓味 13 粒，13 × 22 = 286 粒。'},
+{c:'word',s:'4002',q:'每包朱古力有 40 粒，弟弟買了 3 包後，吃去 2 粒。他還有朱古力多少粒？',
+ o:['118 粒','120 粒','114 粒','38 粒'],a:0,
+ e:'40 × 3 = 120 粒，120 − 2 = 118 粒。'},
+{c:'word',s:'4002',q:'果汁店有橙 280 個，每 3 個橙可製作成一杯果汁。它最多可製作果汁多少杯？',
+ o:['92 杯','93 杯','94 杯','840 杯'],a:1,
+ e:'280 ÷ 3 = 93 餘 1，餘下 1 個不足一杯，所以最多 93 杯。'},
+{c:'word',s:'4002',q:'媽媽每天花費 38 元吃早餐。她在 9 月吃早餐共花了多少元？',
+ o:['1140 元','1178 元','1064 元','1216 元'],a:0,
+ e:'9 月有 30 天；38 × 30 = 1140 元。'},
+{c:'word',s:'4002',q:'工廠每 15 枝鉛筆裝成一盒，把 25 盒裝成一箱。文具店買入 16 箱，即買入鉛筆多少枝？',
+ o:['6000 枝','400 枝','6400 枝','375 枝'],a:0,
+ e:'15 × 25 = 375 枝一箱；375 × 16 = 6000 枝。'},
+{c:'word',s:'4003',q:'把 358 粒波子平均分裝成 12 盒後，再把餘下的波子放進其中的一個盒中，這個盒共有波子多少粒？',
+ o:['29 粒','39 粒','10 粒','30 粒'],a:1,
+ e:'358 ÷ 12 = 29 餘 10；該盒 = 29 + 10 = 39 粒。'},
+{c:'word',s:'4003',q:'李先生以分期付款方式購買一部洗衣機，每月供款 187 元，共要供款 1 年 6 個月。他共付款多少元？',
+ o:['2244 元','3366 元','1122 元','2805 元'],a:1,
+ e:'1 年 6 個月 = 18 個月；187 × 18 = 3366 元。'},
+{c:'word',s:'4003',q:'餐具價目表如下。媽媽選購較便宜的一款飯碗，共買了 16 個，她需付多少元？',
+ t:'<table><tr><th>貨品</th><th>價錢</th></tr><tr><td>陶瓷飯碗</td><td>$16.00</td></tr><tr><td>塑膠水杯</td><td>$10.00</td></tr><tr><td>塑膠飯碗</td><td>$12.00</td></tr></table>',
+ o:['256 元','192 元','160 元','176 元'],a:1,
+ e:'兩款飯碗中較便宜的是塑膠飯碗 $12；12 × 16 = 192 元。'},
+{c:'word',s:'4003',q:'小文有圖書 198 本，媽媽要他把所有書都放進箱子內，而每個箱只可容納 24 本。小文最少需要箱子多少個？',
+ o:['8 個','9 個','10 個','7 個'],a:1,
+ e:'198 ÷ 24 = 8 餘 6，餘下 6 本仍需一箱，所以要 9 個。'},
+{c:'word',s:'4003',q:'老師買了 3 包貼紙，每包貼紙有 4 款圖案，每款圖案的貼紙有 25 枚。老師共有貼紙多少枚？',
+ o:['300 枚','100 枚','75 枚','250 枚'],a:0,
+ e:'3 × 4 × 25 = 300 枚。'},
+{c:'word',s:'4003',q:'有 25 塊牛扒，平均每塊重 108 克。全部牛扒共重多少克？',
+ o:['2700 克','2500 克','2708 克','1080 克'],a:0,
+ e:'108 × 25 = 2700 克。'},
+{c:'word',s:'4003',q:'禮堂有椅子 660 張，每行有椅子 22 張。今天有 572 位學生參加講座，最少需要椅子多少行？',
+ o:['26 行','27 行','30 行','25 行'],a:0,
+ e:'572 ÷ 22 = 26，剛好整除，所以需要 26 行。'},
+{c:'word',s:'4004',q:'看台 A 有座位 384 個，看台 B 的座位是看台 A 的 12 倍。看台 B 有座位多少個？',
+ o:['4608 個','4508 個','396 個','32 個'],a:0,
+ e:'384 × 12 = 4608 個。'},
+{c:'word',s:'4004',q:'一個大紙盒可放蘋果的數量是小紙盒的 4 倍多 5 個，每個小紙盒可放 12 個蘋果。現有蘋果 300 個，要全部放入大紙盒內，最少需要大紙盒多少個？',
+ o:['5 個','6 個','7 個','53 個'],a:1,
+ e:'大紙盒 = 12 × 4 + 5 = 53 個；300 ÷ 53 = 5 餘 35，所以要 6 個。'},
+{c:'word',s:'4004',q:'家琪和三位同學到嘉年華會遊玩，門票買三送一，一張門票售 188 元。他們一起支付費用，每人平均須付多少元？',
+ o:['188 元','141 元','94 元','564 元'],a:1,
+ e:'4 人買三送一，只付 3 張 = 564 元；564 ÷ 4 = 141 元。'},
+{c:'word',s:'4004',q:'一個焗爐售 718 元，電磁爐比焗爐便宜 104 元。媽媽付 1000 元買一個電磁爐，應找回多少元？',
+ o:['282 元','386 元','178 元','614 元'],a:1,
+ e:'電磁爐 = 718 − 104 = 614 元；1000 − 614 = 386 元。'},
+{c:'word',s:'4004',q:'校慶紀念口罩 20 個售 40 元，1 張貼紙比 1 個口罩貴 4 元。小明買了 5 張貼紙，共付多少元？',
+ o:['30 元','20 元','24 元','10 元'],a:0,
+ e:'1 個口罩 = 40 ÷ 20 = 2 元；1 張貼紙 = 2 + 4 = 6 元；6 × 5 = 30 元。'},
+{c:'word',s:'4004',q:'一箱羽毛球有 8 打，每打售 55 元。5 箱羽毛球共有多少個羽毛球？',
+ o:['40 個','96 個','480 個','440 個'],a:2,
+ e:'1 打 = 12 個；1 箱 = 8 × 12 = 96 個；5 箱 = 96 × 5 = 480 個。'},
+{c:'word',s:'4004',q:'小明本月共上學了兩星期多 4 天，他本月共上學多少天？',
+ o:['11 天','18 天','24 天','6 天'],a:1,
+ e:'兩星期 = 14 天；14 + 4 = 18 天。'},
+{c:'word',s:'4004',q:'鮮花店推出三款鮮花：A 款 288 元、B 款 168 元、C 款 99 元。凡購買任何 2 件貨品即可減 40 元。小美買了 B 款及 C 款，她共需付多少元？',
+ o:['267 元','227 元','307 元','187 元'],a:1,
+ e:'168 + 99 = 267 元；買 2 件減 40 元 → 267 − 40 = 227 元。'},
+{c:'word',s:'4004',q:'羊羊書店有 246 本小圖書，比大圖書多 133 本。每個大書格最多可放 20 本大圖書，如要把所有大圖書放入書格，最少需要書格多少個？',
+ o:['5 個','6 個','13 個','19 個'],a:1,
+ e:'大圖書 = 246 − 133 = 113 本；113 ÷ 20 = 5 餘 13，所以要 6 個。'},
+
+/* ========== 度量 ========== */
+{c:'measure',s:'4001',q:'2 米 5 厘米 = ? 厘米',o:['25 厘米','205 厘米','250 厘米','2005 厘米'],a:1,
+ e:'1 米 = 100 厘米，2 米 = 200 厘米，再加 5 厘米 = 205 厘米。'},
+{c:'measure',s:'4002',q:'5 升 800 毫升 = ? 毫升',o:['580 毫升','5800 毫升','5080 毫升','58000 毫升'],a:1,
+ e:'1 升 = 1000 毫升，5 升 = 5000 毫升，再加 800 毫升 = 5800 毫升。'},
+{c:'measure',s:'4004',q:'菱形的周界長 12 米，它的邊長是多少？',o:['3 米','4 米','6 米','48 米'],a:0,
+ e:'菱形四條邊長度相等，12 ÷ 4 = 3 米。'},
+{c:'measure',s:'4004',q:'長方形蛋糕的周界是 86 cm，長是 15 cm，這個長方形蛋糕闊多少？',
+ o:['28 cm','43 cm','56 cm','71 cm'],a:0,
+ e:'長 + 闊 = 86 ÷ 2 = 43 cm；闊 = 43 − 15 = 28 cm。'},
+{c:'measure',s:'4004',q:'一個長方形由 5 個相同的正方形排成一行組成，長方形的長是 85 cm。長方形的周界是多少？',
+ o:['102 cm','170 cm','204 cm','340 cm'],a:2,
+ e:'每個正方形邊長 = 85 ÷ 5 = 17 cm，即闊 17 cm；周界 = ( 85 + 17 ) × 2 = 204 cm。'},
+{c:'measure',s:'4004',q:'兩個大小相同的長方形（21 cm × 14 cm）以部分重疊方式拼砌成一個新圖形，重疊的部分是一個邊長 7 cm 的正方形。新圖形的周界是多少？',
+ o:['42 cm','70 cm','98 cm','112 cm'],a:3,
+ e:'兩個長方形周界共 ( 21 + 14 ) × 2 × 2 = 140 cm；重疊令四條長 7 cm 的邊不再在外圍，140 − 7 × 4 = 112 cm。'},
+{c:'measure',s:'4004',q:'一層樓約高 3 ____。橫線上應填甚麼度量單位？',o:['厘米','米','千米','毫米'],a:1,
+ e:'一層樓約高 3 米。'},
+{c:'measure',s:'4004',q:'一個哈密瓜重約 4 ____。橫線上應填甚麼度量單位？',o:['克','千克','毫升','米'],a:1,
+ e:'一個哈密瓜約重 4 千克（公斤）。'},
+{c:'measure',s:'4004',q:'一瓶益力多的容量約是 100 ____。橫線上應填甚麼度量單位？',o:['升','毫升','克','厘米'],a:1,
+ e:'一瓶益力多約 100 毫升。'},
+{c:'measure',s:'4002',q:'以 24 小時報時制表示下午 2 時，應寫成甚麼？',o:['02:00','12:00','14:00','20:00'],a:2,
+ e:'下午 2 時 = 12 + 2 = 14 時，即 14:00。'},
+{c:'measure',s:'4003',q:'一場足球比賽在上午 11 時 30 分開始，下午 1 時 45 分結束。比賽共進行了多久？',
+ o:['2 小時 15 分鐘','1 小時 45 分鐘','2 小時 45 分鐘','3 小時 15 分鐘'],a:0,
+ e:'11:30 → 13:45，共 2 小時 15 分鐘。'},
+{c:'measure',s:'4003',q:'下表是接駁巴士在總站開出的時間表。哥哥在上午 8 時 40 分到達巴士總站，他還要等多久才能乘搭最快開出的接駁巴士？',
+ t:'<table><tr><th>接駁巴士班次</th><th>開出時間</th></tr><tr><td>第一班</td><td>08:20</td></tr><tr><td>第二班</td><td>08:35</td></tr><tr><td>第三班</td><td>09:05</td></tr><tr><td>第四班</td><td>17:45</td></tr><tr><td>第五班</td><td>18:10</td></tr></table>',
+ o:['15 分鐘','25 分鐘','30 分鐘','35 分鐘'],a:1,
+ e:'8:40 之後最快的是第三班 09:05；09:05 − 08:40 = 25 分鐘。'},
+{c:'measure',s:'4003',q:'根據上題的時間表，第五班接駁巴士在何時開出？',
+ t:'<table><tr><th>接駁巴士班次</th><th>開出時間</th></tr><tr><td>第四班</td><td>17:45</td></tr><tr><td>第五班</td><td>18:10</td></tr></table>',
+ o:['上午 6 時 10 分','下午 6 時 10 分','上午 8 時 10 分','下午 8 時 10 分'],a:1,
+ e:'18:10 = 18 − 12 = 下午 6 時 10 分。'},
+{c:'measure',s:'4001',q:'JL513 班機預定抵港時間是 13:05，航程需 2 小時 17 分鐘。它於何時啟航？',
+ t:'<table><tr><th>航班</th><th>啟航地</th><th>預定抵港時間</th></tr><tr><td>SA 710</td><td>新加坡</td><td>14:29</td></tr><tr><td>JL 513</td><td>東京</td><td>13:05</td></tr></table>',
+ o:['上午 10 時 48 分','上午 11 時 48 分','下午 3 時 22 分','上午 10 時 58 分'],a:0,
+ e:'13:05 − 2 小時 = 11:05；11:05 − 17 分鐘 = 10:48，即上午 10 時 48 分。'},
+
+/* ========== 方向 ========== */
+{c:'direction',s:'4002',q:'明明面向東方，他背向哪一方？',o:['南方','西方','北方','東方'],a:1,
+ e:'東的相反方向是西，所以他背向西方。'},
+{c:'direction',s:'4004',q:'小明面向東南方，他向右轉三個直角後，現正面向哪一方？',
+ o:['東北','東南','西北','西南'],a:0,
+ e:'向右轉一個直角 → 西南；兩個 → 西北；三個 → 東北。'},
+
+/* ========== 四邊形與圖形 ========== */
+{c:'shape',s:'4001',q:'哪一種四邊形是四邊長度相等及沒有直角的？',o:['正方形','長方形','菱形','梯形'],a:2,
+ e:'菱形四條邊長度相等；若有四個直角便成為正方形，所以答案是菱形。'},
+{c:'shape',s:'4002',q:'長方形必定具備以下哪一項性質？',
+ o:['對邊長度不相等','只有一組對邊平行','四個角都是直角','四條邊長度相等'],a:2,
+ e:'長方形的四個角都是直角；四邊相等的只有正方形。'},
+{c:'shape',s:'4002',q:'以下哪一項／些描述是必定正確的？<br>(1) 所有正方形皆是長方形<br>(2) 菱形具備了平行四邊形的特性<br>(3) 梯形是平行四邊形的一種',
+ o:['(1) 和 (2)','(1) 和 (3)','(2) 和 (3)','(1)、(2) 和 (3)'],a:0,
+ e:'(3) 錯：梯形只有一組對邊平行，不是平行四邊形。(1)、(2) 正確。'},
+{c:'shape',s:'4001',q:'利用 4 cm、4 cm、5 cm、5 cm 四支竹籤，可以拼出哪一個四邊形？',
+ o:['正方形','長方形','梯形','菱形'],a:1,
+ e:'兩組對邊分別相等（4 cm 和 5 cm），可以拼成長方形。'},
+{c:'shape',s:'4003',q:'小健把一個正六邊形分割成三個大小相同的四邊形，下列哪一個是該四邊形？',
+ o:['正方形','直角梯形','菱形','長方形'],a:2,
+ e:'正六邊形可以分割成三個完全相同的菱形。'},
+{c:'shape',s:'4003',q:'弟弟用一個直角三角形和一個正方形拼出一個四邊形，他拼出哪種四邊形？',
+ o:['梯形','菱形','平行四邊形','長方形'],a:0,
+ e:'把直角三角形的直角邊貼在正方形的一邊上，會拼成一個直角梯形。'},
+{c:'shape',s:'4004',q:'圖形 A 是正方形，圖形 B 是直角三角形。圖形 A 和圖形 B 可以拼砌出以下哪一個圖形？',
+ o:['三角形','等腰三角形','梯形','五邊形'],a:2,
+ e:'正方形加一個直角三角形，可以拼成一個直角梯形。'},
+
+/* ========== 數據處理 ========== */
+{c:'data',s:'4004',q:'下表記錄了上星期超級市場的零食銷量。糖果的銷量取近似值至百位是多少？',
+ t:'<table><tr><th>零食</th><th>薯片</th><th>糖果</th><th>餅乾</th><th>肉乾</th></tr><tr><td>銷量（包）</td><td>926</td><td>378</td><td>682</td><td>311</td></tr></table>',
+ o:['300','350','400','380'],a:2,
+ e:'378 的十位是 7（≥ 5），所以進位到 400。'},
+{c:'data',s:'4004',q:'下表記錄了零食銷量。哪一種零食的銷量取近似值至百位後是 900？',
+ t:'<table><tr><th>零食</th><th>薯片</th><th>糖果</th><th>餅乾</th><th>肉乾</th></tr><tr><td>銷量（包）</td><td>926</td><td>378</td><td>682</td><td>311</td></tr></table>',
+ o:['薯片','糖果','餅乾','肉乾'],a:0,
+ e:'926 的十位是 2（< 5），捨去 → 900。'},
+{c:'data',s:'4004',q:'下表是志明和四位朋友收集超市印花的數量。收集最多超市印花的人是誰？',
+ t:'<table><tr><th>人物</th><th>志明</th><th>子揚</th><th>心怡</th><th>建樹</th><th>小美</th></tr><tr><td>數量（個）</td><td>80</td><td>50</td><td>90</td><td>30</td><td>60</td></tr></table>',
+ o:['志明','子揚','心怡','小美'],a:2,
+ e:'心怡有 90 個，是五人中最多的。'},
+{c:'data',s:'4004',q:'根據下表，志明收集的超市印花和建樹的相差多少個？',
+ t:'<table><tr><th>人物</th><th>志明</th><th>子揚</th><th>心怡</th><th>建樹</th><th>小美</th></tr><tr><td>數量（個）</td><td>80</td><td>50</td><td>90</td><td>30</td><td>60</td></tr></table>',
+ o:['30 個','50 個','60 個','110 個'],a:1,
+ e:'80 − 30 = 50 個。'},
+{c:'data',s:'4004',q:'根據下表，誰收集的超市印花是建樹的 2 倍？',
+ t:'<table><tr><th>人物</th><th>志明</th><th>子揚</th><th>心怡</th><th>建樹</th><th>小美</th></tr><tr><td>數量（個）</td><td>80</td><td>50</td><td>90</td><td>30</td><td>60</td></tr></table>',
+ o:['志明','子揚','心怡','小美'],a:3,
+ e:'建樹有 30 個，30 × 2 = 60 個，即小美。'},
+{c:'data',s:'4004',q:'根據下表，志明和四位朋友收集超市印花的總數量是多少個？',
+ t:'<table><tr><th>人物</th><th>志明</th><th>子揚</th><th>心怡</th><th>建樹</th><th>小美</th></tr><tr><td>數量（個）</td><td>80</td><td>50</td><td>90</td><td>30</td><td>60</td></tr></table>',
+ o:['290 個','300 個','310 個','320 個'],a:2,
+ e:'80 + 50 + 90 + 30 + 60 = 310 個。'},
+{c:'data',s:'4004',q:'承上題，65 個印花可換一套卡通餐具。他們五人的印花總數（310 個）足夠換領五套卡通餐具嗎？',
+ o:['足夠，還多出 15 個','不足夠，差 15 個','剛剛好','不足夠，差 65 個'],a:1,
+ e:'五套需要 65 × 5 = 325 個；325 − 310 = 15 個，所以不足夠，差 15 個。'}
+
+];
+
+</script>
+
+<script>
+(function(){
+"use strict";
+var Q = window.QUESTIONS || [];
+var CATS = [
+  {k:'all',      n:'全部'},
+  {k:'calc',     n:'數的運算'},
+  {k:'num',      n:'因數與倍數'},
+  {k:'word',     n:'應用題'},
+  {k:'measure',  n:'度量'},
+  {k:'shape',    n:'圖形'},
+  {k:'direction',n:'方向'},
+  {k:'data',     n:'數據處理'}
+];
+var LENS = [10,20,30,0];     // 0 = 全部
+var $ = function(id){ return document.getElementById(id); };
+var cat='all', len=10;
+var pool=[], idx=0, score=0, combo=0, bestCombo=0, correct=0, wrong=[], locked=false;
+
+document.getElementById('totalQ').textContent = Q.length;
+
+/* ---------- 開始畫面 ---------- */
+function countOf(k){ return k==='all' ? Q.length : Q.filter(function(q){return q.c===k;}).length; }
+
+function buildChips(){
+  var cc = $('catChips'); cc.innerHTML='';
+  CATS.forEach(function(c){
+    if(countOf(c.k)===0) return;
+    var b=document.createElement('button');
+    b.className='chip'; b.type='button';
+    b.setAttribute('aria-pressed', c.k===cat);
+    b.innerHTML = c.n + '<span class="n">'+countOf(c.k)+'</span>';
+    b.onclick=function(){ cat=c.k; buildChips(); showBest(); };
+    cc.appendChild(b);
+  });
+  var lc = $('lenChips'); lc.innerHTML='';
+  LENS.forEach(function(L){
+    var max=countOf(cat);
+    if(L!==0 && L>max) return;
+    var b=document.createElement('button');
+    b.className='chip'; b.type='button';
+    b.setAttribute('aria-pressed', L===len);
+    b.textContent = L===0 ? ('全部 '+max+' 題') : (L+' 題');
+    b.onclick=function(){ len=L; buildChips(); };
+    lc.appendChild(b);
+  });
+  if(len!==0 && len>countOf(cat)){ len=0; }
+}
+
+function bestKey(){ return 'p4maths.best.'+cat+'.'+len; }
+function showBest(){
+  var b=0; try{ b=parseInt(localStorage.getItem(bestKey())||'0',10)||0; }catch(e){}
+  $('bestLine').textContent = b ? ('此組合最佳分數：'+b+' 分') : '';
+}
+
+/* ---------- 工具 ---------- */
+function shuffle(a){
+  a=a.slice();
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; }
+  return a;
+}
+function catName(k){
+  for(var i=0;i<CATS.length;i++){ if(CATS[i].k===k) return CATS[i].n; }
+  return k;
+}
+/* 把選項連同正確答案一起打亂 */
+function prep(q){
+  var pairs = q.o.map(function(txt,i){ return {txt:txt, ok:i===q.a}; });
+  pairs = shuffle(pairs);
+  return { q:q, opts:pairs, ans:pairs.findIndex(function(p){return p.ok;}) };
+}
+
+/* ---------- 音效（WebAudio，無需檔案） ---------- */
+var AC=null;
+function beep(type){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    o.type='sine';
+    var now=AC.currentTime;
+    if(type==='ok'){ o.frequency.setValueAtTime(660,now); o.frequency.setValueAtTime(990,now+.09); }
+    else{ o.frequency.setValueAtTime(300,now); o.frequency.setValueAtTime(180,now+.11); }
+    g.gain.setValueAtTime(.085,now);
+    g.gain.exponentialRampToValueAtTime(.0001,now+.22);
+    o.start(now); o.stop(now+.23);
+  }catch(e){}
+}
+
+/* ---------- 遊戲 ---------- */
+function start(){
+  var src = cat==='all' ? Q : Q.filter(function(q){return q.c===cat;});
+  var n = len===0 ? src.length : Math.min(len, src.length);
+  pool = shuffle(src).slice(0,n).map(prep);
+  idx=0; score=0; combo=0; bestCombo=0; correct=0; wrong=[];
+  $('qAll').textContent = pool.length;
+  $('catPill').textContent = catName(cat);
+  $('home').classList.add('hide');
+  $('end').classList.add('hide');
+  $('game').classList.remove('hide');
+  render();
+}
+
+function render(){
+  locked=false;
+  var item = pool[idx], q = item.q;
+  $('qNow').textContent = idx+1;
+  $('score').textContent = score;
+  $('combo').textContent = combo;
+  $('comboPill').style.opacity = combo>1 ? 1 : .45;
+  $('prog').style.width = (idx/pool.length*100)+'%';
+
+  $('qsrc').textContent = catName(q.c) + ' · 試卷 ' + q.s;
+  $('qtext').innerHTML = q.q;
+  $('qtable').innerHTML = q.t || '';
+
+  var box = $('opts'); box.innerHTML='';
+  item.opts.forEach(function(p,i){
+    var b=document.createElement('button');
+    b.className='opt'; b.type='button';
+    b.innerHTML = '<span class="k">'+'ABCD'[i]+'</span><span>'+p.txt+'</span>';
+    b.onclick=function(){ answer(i); };
+    box.appendChild(b);
+  });
+  $('fb').innerHTML='';
+  $('nextBtn').classList.add('hide');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function answer(pick){
+  if(locked) return; locked=true;
+  var item=pool[idx], q=item.q, right=item.ans;
+  var btns=$('opts').children;
+  for(var i=0;i<btns.length;i++){
+    btns[i].disabled=true;
+    if(i===right) btns[i].classList.add('ok');
+    else if(i===pick) btns[i].classList.add('bad');
+  }
+  var good = pick===right;
+  if(good){
+    combo++; bestCombo=Math.max(bestCombo,combo); correct++;
+    var gain = 10 + Math.min(combo-1,5)*2;      // 連擊最多 +10
+    score += gain;
+    $('fb').innerHTML='<div class="fb ok"><div class="t">答對了！ +'+gain+' 分'+
+      (combo>1?'（'+combo+' 連擊）':'')+'</div><div class="e">'+q.e+'</div></div>';
+    beep('ok');
+  }else{
+    combo=0;
+    wrong.push({q:q, your:item.opts[pick].txt, right:item.opts[right].txt});
+    $('fb').innerHTML='<div class="fb bad"><div class="t">答錯了</div>'+
+      '<div class="e">正確答案：<b>'+item.opts[right].txt+'</b><br>'+q.e+'</div></div>';
+    beep('bad');
+  }
+  $('score').textContent=score;
+  $('combo').textContent=combo;
+  var nb=$('nextBtn');
+  nb.textContent = (idx===pool.length-1) ? '看成績' : '下一題';
+  nb.classList.remove('hide');
+  nb.focus({preventScroll:true});
+}
+
+function next(){
+  idx++;
+  if(idx>=pool.length) finish(); else render();
+}
+
+function finish(){
+  $('prog').style.width='100%';
+  $('game').classList.add('hide');
+  $('end').classList.remove('hide');
+  var rate = Math.round(correct/pool.length*100);
+  $('finalScore').textContent = score;
+  $('sCorrect').textContent = correct+' / '+pool.length;
+  $('sRate').textContent = rate+'%';
+  $('sBest').textContent = bestCombo;
+
+  var msg = rate===100 ? '滿分！太厲害了 🏆'
+          : rate>=80  ? '非常好，繼續保持！🎉'
+          : rate>=60  ? '不錯，再努力一點！💪'
+          : rate>=40  ? '繼續練習，你會進步的！📘'
+                      : '別灰心，重新挑戰吧！🌱';
+  $('finalMsg').textContent = msg;
+
+  try{
+    var k=bestKey(), b=parseInt(localStorage.getItem(k)||'0',10)||0;
+    if(score>b) localStorage.setItem(k,String(score));
+  }catch(e){}
+
+  var r=$('review');
+  if(!wrong.length){ r.innerHTML='<div class="fb ok"><div class="t">全部答對，沒有需要訂正的題目！</div></div>'; }
+  else{
+    r.innerHTML='<div class="label">需要訂正的題目（'+wrong.length+'）</div>' +
+      wrong.map(function(w){
+        return '<div class="rv"><div class="q">'+w.q.q+'</div>'+
+               '<div class="y">你的答案：'+w.your+'</div>'+
+               '<div class="a">正確答案：'+w.right+'</div>'+
+               '<div class="e">'+w.q.e+'</div></div>';
+      }).join('');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- 事件 ---------- */
+$('startBtn').onclick = start;
+$('nextBtn').onclick  = next;
+$('againBtn').onclick = start;
+$('homeBtn').onclick  = function(){
+  $('end').classList.add('hide');
+  $('game').classList.add('hide');
+  $('home').classList.remove('hide');
+  buildChips(); showBest();
+};
+
+document.addEventListener('keydown',function(e){
+  if($('game').classList.contains('hide')) return;
+  if(e.key>='1' && e.key<='4'){
+    var b=$('opts').children[+e.key-1];
+    if(b && !b.disabled) b.click();
+  }else if(e.key==='Enter' || e.key===' '){
+    var nb=$('nextBtn');
+    if(!nb.classList.contains('hide')){ e.preventDefault(); nb.click(); }
+  }
+});
+
+buildChips(); showBest();
+})();
+</script>
+</body>
+</html>
