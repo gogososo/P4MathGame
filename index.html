@@ -121,6 +121,38 @@ th{background:#1b2b4a;font-weight:700}
 .foot{text-align:center;color:var(--dim);font-size:12px;margin-top:22px;line-height:1.9}
 kbd{background:#16233c;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
 
+/* ---------- 排行榜 ---------- */
+.namebox{margin-top:16px;padding:15px;border-radius:13px;
+  border:1.5px solid var(--warn);background:rgba(255,209,102,.09)}
+.namebox .t{font-weight:800;color:var(--warn);margin-bottom:3px}
+.namebox .s{font-size:13px;color:var(--dim);margin-bottom:11px}
+.nrow{display:flex;gap:9px}
+.nrow input{flex:1 1 auto;min-width:0;background:#0f1a2e;border:1.5px solid var(--line);
+  color:var(--ink);border-radius:11px;padding:12px 14px;font-size:16px;font-family:inherit}
+.nrow input:focus{outline:0;border-color:var(--warn)}
+.nrow button{flex:none;padding:12px 18px;border:0;border-radius:11px;cursor:pointer;
+  font-family:inherit;font-weight:800;font-size:14px;background:var(--warn);color:#2b2000}
+.nrow button.skip{background:transparent;border:1px solid var(--line);color:var(--dim);font-weight:600}
+
+.lbwrap{margin-top:16px}
+.lb{width:100%;border-collapse:collapse;font-size:13.5px;background:transparent;min-width:0}
+.lb th,.lb td{border:0;border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;white-space:normal}
+.lb th{background:transparent;color:var(--dim);font-size:11.5px;font-weight:600;letter-spacing:.4px}
+.lb td.r{width:34px;text-align:center;font-weight:800;color:var(--dim)}
+.lb td.sc{text-align:right;font-weight:800;color:var(--accent);white-space:nowrap}
+.lb td.nm{font-weight:600;word-break:break-word}
+.lb td.meta{color:var(--dim);font-size:11.5px;white-space:nowrap;text-align:right}
+.lb tr.me td{background:rgba(255,209,102,.12)}
+.lb tr.me td.r{color:var(--warn)}
+.lb tr:last-child td{border-bottom:0}
+.medal{font-size:15px}
+.lbempty{color:var(--dim);font-size:13.5px;text-align:center;padding:18px 0}
+.lbhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.lbhead h2{flex:1 1 auto}
+.mini{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:9px;
+  padding:5px 10px;font-size:11.5px;cursor:pointer;font-family:inherit}
+.mini:hover{border-color:var(--bad);color:var(--bad)}
+
 @media(max-width:520px){
   .qtext{font-size:16.5px} .opt{font-size:15px} .score .big{font-size:44px}
   .stats{grid-template-columns:repeat(3,1fr)}
@@ -150,7 +182,21 @@ kbd{background:#16233c;border:1px solid var(--line);border-radius:5px;padding:1p
     <div class="chips" id="lenChips"></div>
 
     <button class="btn" id="startBtn">開始挑戰</button>
+    <button class="btn ghost" id="lbBtn">🏆 排行榜</button>
+    <div class="foot" id="cloudBadge"></div>
     <div class="foot" id="bestLine"></div>
+  </section>
+
+  <!-- ===== 排行榜畫面 ===== -->
+  <section id="board" class="card hide">
+    <div class="lbhead">
+      <h2>🏆 排行榜</h2>
+      <button class="mini" id="clearBtn">清除紀錄</button>
+    </div>
+    <p class="sub">各題數分開計算排名，只保留最高的 10 個分數。</p>
+    <div class="chips" id="lbLenChips"></div>
+    <div class="lbwrap" id="lbTable"></div>
+    <button class="btn ghost" id="boardBack">返回</button>
   </section>
 
   <!-- ===== 遊戲畫面 ===== -->
@@ -182,6 +228,19 @@ kbd{background:#16233c;border:1px solid var(--line);border-radius:5px;padding:1p
       <div class="stat"><b id="sRate">0%</b><span>正確率</span></div>
       <div class="stat"><b id="sBest">0</b><span>最長連擊</span></div>
     </div>
+
+    <div class="namebox hide" id="nameBox">
+      <div class="t" id="nameTitle">🎉 你打入了排行榜！</div>
+      <div class="s">輸入你的名字，把成績記下來。</div>
+      <div class="nrow">
+        <input id="nameInput" type="text" maxlength="12" placeholder="你的名字" autocomplete="off">
+        <button id="saveName">儲存</button>
+        <button id="skipName" class="skip">略過</button>
+      </div>
+    </div>
+
+    <div class="lbwrap" id="lbMini"></div>
+
     <div class="review" id="review"></div>
     <div class="row">
       <button class="btn" id="againBtn">再玩一次</button>
@@ -194,6 +253,18 @@ kbd{background:#16233c;border:1px solid var(--line);border-radius:5px;padding:1p
     共 <span id="totalQ">0</span> 題題庫<br>離線可用，毋須網絡
   </div>
 </div>
+
+<script>
+/* ============================================================
+   設定 — 要用 Google 試算表做全班共用排行榜，
+   把 Apps Script 部署後的 /exec 網址貼在 SHEET_API 之內即可。
+   留空 '' 則只用本機排行榜（離線、各自獨立）。
+   ============================================================ */
+window.P4_CONFIG = {
+  SHEET_API: 'https://script.google.com/macros/s/AKfycbxuFLQ4_JAKo3it4nF9bYqCZOgvU7j8s7qSPYHnWCtzHlgdqEnBE2HYXuAE4kBkG64H/exec',   // 例如：'https://script.google.com/macros/s/AKfycb..../exec'
+  SHEET_KEY: ''    // 如 Code.gs 內設定了 SECRET，這裡填相同字串
+};
+</script>
 
 <script>
 /* 題庫：取材自 Sources questions 內四份 P.4 數學試卷
@@ -488,6 +559,7 @@ var LENS = [10,20,30,0];     // 0 = 全部
 var $ = function(id){ return document.getElementById(id); };
 var cat='all', len=10;
 var pool=[], idx=0, score=0, combo=0, bestCombo=0, correct=0, wrong=[], locked=false;
+var roundLenKey='10';
 
 document.getElementById('totalQ').textContent = Q.length;
 
@@ -557,6 +629,221 @@ function beep(type){
     g.gain.exponentialRampToValueAtTime(.0001,now+.22);
     o.start(now); o.stop(now+.23);
   }catch(e){}
+}
+
+/* ---------- 排行榜 ----------
+   預設：資料存在本機 localStorage。
+   若 P4_CONFIG.SHEET_API 有填寫，則改用 Google 試算表作共用排行榜，
+   並以 localStorage 作離線備份；連線失敗會自動退回本機模式。      */
+var CFG  = window.P4_CONFIG || {};
+var API  = String(CFG.SHEET_API || '').trim();
+var AKEY = String(CFG.SHEET_KEY || '').trim();
+var cloud = { on: !!API, ok: false, tried: false };
+var cache = {};            /* lenKey -> rows（同步讀取用的快取） */
+
+/* --- JSONP：避開 CORS，手機電腦都可用 --- */
+function jsonp(url, ok, fail){
+  var s = document.createElement('script');
+  var name = '__p4cb' + (jsonp.i = (jsonp.i || 0) + 1);
+  var done = false;
+  var timer = setTimeout(function(){ finish(null, 'timeout'); }, 12000);
+  function finish(res, err){
+    if(done) return; done = true;
+    clearTimeout(timer);
+    try{ delete window[name]; }catch(e){ window[name] = undefined; }
+    if(s.parentNode) s.parentNode.removeChild(s);
+    if(err) { if(fail) fail(err); } else { ok(res); }
+  }
+  window[name] = function(res){ finish(res, null); };
+  s.onerror = function(){ finish(null, 'network'); };
+  s.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'callback=' + name;
+  document.head.appendChild(s);
+}
+function api(params, ok, fail){
+  var q = [];
+  for(var k in params){ if(params.hasOwnProperty(k)){
+    q.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+  }}
+  if(AKEY) q.push('key=' + encodeURIComponent(AKEY));
+  jsonp(API + '?' + q.join('&'), function(res){
+    if(res && res.ok) ok(res.data); else if(fail) fail((res && res.error) || 'error');
+  }, fail);
+}
+
+var LB = {
+  MAX: 10,
+  key: function(lenKey){ return 'p4maths.lb.v1.' + lenKey; },
+  lenKey: function(L){ return L===0 ? 'all' : String(L); },
+  lenName: function(k){ return k==='all' ? '全部題目' : (k + ' 題'); },
+
+  /* 本機備份 */
+  localLoad: function(lenKey){
+    try{
+      var raw = localStorage.getItem(LB.key(lenKey));
+      var a = raw ? JSON.parse(raw) : [];
+      return Object.prototype.toString.call(a)==='[object Array]' ? a : [];
+    }catch(e){ return []; }
+  },
+  localSave: function(lenKey, rows){
+    try{ localStorage.setItem(LB.key(lenKey), JSON.stringify(rows)); }catch(e){}
+  },
+
+  /* 同步讀取：先用快取，沒有就用本機備份 */
+  load: function(lenKey){
+    if(cache[lenKey]) return cache[lenKey];
+    cache[lenKey] = LB.localLoad(lenKey);
+    return cache[lenKey];
+  },
+  save: function(lenKey, rows){
+    cache[lenKey] = rows;
+    LB.localSave(lenKey, rows);
+  },
+
+  sort: function(rows){
+    return rows.sort(function(a,b){
+      if(b.s!==a.s) return b.s-a.s;                 /* 分數高者先 */
+      var ra=a.t?a.c/a.t:0, rb=b.t?b.c/b.t:0;
+      if(rb!==ra) return rb-ra;                     /* 正確率高者先 */
+      return a.d-b.d;                               /* 較早達成者先 */
+    });
+  },
+
+  /* 分數是否足以打入前 10 */
+  qualifies: function(lenKey, score){
+    if(score<=0) return false;
+    var rows = LB.load(lenKey);
+    if(rows.length < LB.MAX) return true;
+    var sorted = LB.sort(rows.slice());
+    return score > sorted[sorted.length-1].s;
+  },
+  rankOf: function(lenKey, score){
+    var rows = LB.sort(LB.load(lenKey).slice());
+    var r = 1;
+    for(var i=0;i<rows.length;i++){ if(rows[i].s>score) r++; }
+    return r;
+  },
+
+  /* 從雲端取回某題數的榜（成功才覆寫快取） */
+  refresh: function(lenKey, done){
+    if(!cloud.on){ if(done) done(false); return; }
+    api({action:'list', len:lenKey}, function(data){
+      cloud.ok = true; cloud.tried = true;
+      LB.save(lenKey, data.rows || []);
+      setCloudBadge();
+      if(done) done(true);
+    }, function(){
+      cloud.ok = false; cloud.tried = true;
+      setCloudBadge();
+      if(done) done(false);
+    });
+  },
+
+  /* 新增成績；done(result) 會在完成後呼叫 */
+  add: function(lenKey, entry, done){
+    function localAdd(){
+      var rows = LB.load(lenKey).slice();
+      entry.id = entry.id || ('e'+Date.now()+Math.floor(Math.random()*1000));
+      rows.push(entry);
+      rows = LB.sort(rows).slice(0, LB.MAX);
+      LB.save(lenKey, rows);
+      return { rows:rows, id:entry.id,
+               rank: rows.map(function(r){return r.id;}).indexOf(entry.id)+1 };
+    }
+    if(!cloud.on){ done(localAdd()); return; }
+    api({action:'add', len:lenKey, name:entry.n, score:entry.s,
+         correct:entry.c, total:entry.t, cat:entry.cat},
+      function(data){
+        cloud.ok = true; setCloudBadge();
+        LB.save(lenKey, data.rows || []);
+        done({ rows:data.rows||[], id:data.id, rank:data.rank });
+      },
+      function(){                       /* 連線失敗 → 退回本機 */
+        cloud.ok = false; setCloudBadge();
+        done(localAdd());
+      });
+  }
+};
+
+function setCloudBadge(){
+  var el = $('cloudBadge');
+  if(!el) return;
+  if(!cloud.on){ el.textContent=''; el.className='foot'; return; }
+  el.textContent = cloud.ok ? '☁️ 已連接共用排行榜' :
+    (cloud.tried ? '⚠️ 連不上共用排行榜，暫時使用本機紀錄' : '☁️ 正在連接共用排行榜…');
+}
+
+/* 啟動時把四個榜一次過取回 */
+function bootCloud(){
+  if(!cloud.on){ return; }
+  setCloudBadge();
+  ['10','20','30','all'].forEach(function(k){ LB.refresh(k); });
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+function dstr(ms){
+  var d=new Date(ms);
+  return (d.getMonth()+1)+'/'+d.getDate();
+}
+
+function renderBoard(el, lenKey, hiId){
+  var rows = LB.sort(LB.load(lenKey).slice());
+  if(!rows.length){
+    el.innerHTML = '<div class="lbempty">這個題數還沒有紀錄，快去挑戰吧！</div>';
+    return;
+  }
+  var medal = ['🥇','🥈','🥉'];
+  var html = '<table class="lb"><tr><th></th><th>名字</th><th style="text-align:right">分數</th><th style="text-align:right">成績</th></tr>';
+  rows.forEach(function(r,i){
+    var me = (r.id && r.id===hiId) ? ' class="me"' : '';
+    var rk = i<3 ? '<span class="medal">'+medal[i]+'</span>' : (i+1);
+    html += '<tr'+me+'><td class="r">'+rk+'</td>'+
+            '<td class="nm">'+esc(r.n)+'</td>'+
+            '<td class="sc">'+r.s+'</td>'+
+            '<td class="meta">'+r.c+'/'+r.t+' · '+catName(r.cat)+'<br>'+dstr(r.d)+'</td></tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+}
+
+/* 排行榜畫面（由主頁進入） */
+var boardLen = 'all';
+function buildLbChips(){
+  var box = $('lbLenChips'); box.innerHTML='';
+  ['10','20','30','all'].forEach(function(k){
+    var b=document.createElement('button');
+    b.className='chip'; b.type='button';
+    b.setAttribute('aria-pressed', k===boardLen);
+    var cnt = LB.load(k).length;
+    b.innerHTML = LB.lenName(k) + '<span class="n">'+cnt+'</span>';
+    b.onclick=function(){ boardLen=k; buildLbChips(); renderBoard($('lbTable'), boardLen, null); };
+    box.appendChild(b);
+  });
+}
+function openBoard(){
+  $('home').classList.add('hide');
+  $('end').classList.add('hide');
+  $('game').classList.add('hide');
+  $('board').classList.remove('hide');
+  /* 預設顯示：先用目前選擇的題數，若無紀錄則選第一個有紀錄的 */
+  var prefer = LB.lenKey(len);
+  var order = [prefer,'10','20','30','all'];
+  boardLen = prefer;
+  for(var i=0;i<order.length;i++){
+    if(LB.load(order[i]).length){ boardLen = order[i]; break; }
+  }
+  buildLbChips();
+  renderBoard($('lbTable'), boardLen, null);
+  if(cloud.on){
+    LB.refresh(boardLen, function(){
+      buildLbChips();
+      renderBoard($('lbTable'), boardLen, null);
+    });
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* ---------- 遊戲 ---------- */
@@ -636,6 +923,20 @@ function next(){
   if(idx>=pool.length) finish(); else render();
 }
 
+function offerEntry(lk){
+  var nb = $('nameBox');
+  renderBoard($('lbMini'), lk, null);
+  if(LB.qualifies(lk, score)){
+    $('nameTitle').textContent = '🎉 你打入了排行榜第 ' + LB.rankOf(lk, score) + ' 位！';
+    var last=''; try{ last = localStorage.getItem('p4maths.lastName')||''; }catch(e){}
+    $('nameInput').value = last;
+    nb.classList.remove('hide');
+    setTimeout(function(){ try{ $('nameInput').focus(); }catch(e){} }, 300);
+  }else{
+    nb.classList.add('hide');
+  }
+}
+
 function finish(){
   $('prog').style.width='100%';
   $('game').classList.add('hide');
@@ -658,6 +959,17 @@ function finish(){
     if(score>b) localStorage.setItem(k,String(score));
   }catch(e){}
 
+  /* ---- 排行榜 ---- */
+  var lk = len===0 ? 'all' : LB.lenKey(len);
+  roundLenKey = lk;
+  if(cloud.on){
+    renderBoard($('lbMini'), lk, null);
+    $('nameBox').classList.add('hide');
+    LB.refresh(lk, function(){ offerEntry(lk); });   /* 先取最新的榜再判斷 */
+  }else{
+    offerEntry(lk);
+  }
+
   var r=$('review');
   if(!wrong.length){ r.innerHTML='<div class="fb ok"><div class="t">全部答對，沒有需要訂正的題目！</div></div>'; }
   else{
@@ -676,6 +988,39 @@ function finish(){
 $('startBtn').onclick = start;
 $('nextBtn').onclick  = next;
 $('againBtn').onclick = start;
+$('lbBtn').onclick    = openBoard;
+$('boardBack').onclick = function(){
+  $('board').classList.add('hide');
+  $('home').classList.remove('hide');
+  buildChips(); showBest();
+};
+$('clearBtn').onclick = function(){
+  if(cloud.on){
+    alert('現時使用共用排行榜，紀錄儲存在 Google 試算表內。\n如需清除，請在試算表中刪除資料，或在 Apps Script 執行 resetSheet()。');
+    return;
+  }
+  if(!confirm('確定要清除「'+LB.lenName(boardLen)+'」的排行榜紀錄嗎？此動作無法復原。')) return;
+  LB.save(boardLen, []);
+  buildLbChips();
+  renderBoard($('lbTable'), boardLen, null);
+};
+$('saveName').onclick = function(){
+  var nm = ($('nameInput').value||'').trim().slice(0,12);
+  if(!nm){ $('nameInput').focus(); return; }
+  try{ localStorage.setItem('p4maths.lastName', nm); }catch(e){}
+  var btn = $('saveName');
+  btn.disabled = true; btn.textContent = '儲存中…';
+  LB.add(roundLenKey, { n:nm, s:score, c:correct, t:pool.length, cat:cat, d:Date.now() },
+    function(res){
+      btn.disabled = false; btn.textContent = '儲存';
+      $('nameBox').classList.add('hide');
+      renderBoard($('lbMini'), roundLenKey, res.id);
+    });
+};
+$('nameInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){ e.preventDefault(); $('saveName').click(); }
+});
+$('skipName').onclick = function(){ $('nameBox').classList.add('hide'); };
 $('homeBtn').onclick  = function(){
   $('end').classList.add('hide');
   $('game').classList.add('hide');
@@ -694,7 +1039,7 @@ document.addEventListener('keydown',function(e){
   }
 });
 
-buildChips(); showBest();
+buildChips(); showBest(); bootCloud();
 })();
 </script>
 </body>
